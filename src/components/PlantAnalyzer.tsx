@@ -1,12 +1,12 @@
-import React, { useState } from 'react';
-import { Card, CardContent } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Separator } from '@/components/ui/separator';
-import { DropletIcon, LeafIcon } from 'lucide-react';
-import ImageUploader from './ImageUploader';
-import RecommendationCard from './RecommendationCard';
-import { toast } from 'sonner';
-import MoistureDisplay from './MoistureDisplay';
+import React, { useState } from "react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Separator } from "@/components/ui/separator";
+import { DropletIcon, LeafIcon } from "lucide-react";
+import ImageUploader from "./ImageUploader";
+import RecommendationCard from "./RecommendationCard";
+import { toast } from "sonner";
+import MoistureDisplay from "./MoistureDisplay";
 
 export type AnalysisResult = {
   classifiedSoilMoisture: string;
@@ -45,8 +45,10 @@ export type AnalysisResult = {
 const PlantAnalyzer: React.FC = () => {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
-  const [analysisResult, setAnalysisResult] = useState<AnalysisResult | null>(null);
-  const [activeTab, setActiveTab] = useState('overview');
+  const [analysisResult, setAnalysisResult] = useState<AnalysisResult | null>(
+    null
+  );
+  const [activeTab, setActiveTab] = useState("overview");
 
   const handleImageUpload = async (image: File) => {
     try {
@@ -54,11 +56,11 @@ const PlantAnalyzer: React.FC = () => {
       setImagePreview(URL.createObjectURL(image));
 
       const formData = new FormData();
-      formData.append('image', image);
+      formData.append("image", image);
 
-      // Use your actual API endpoint here
-      const response = await fetch('http://127.0.0.1:5000/api/analyze-soil', {
-        method: 'POST',
+      const baseUrl = import.meta.env.VITE_API_BASE_URL;
+      const response = await fetch(`${baseUrl}/api/analyze-soil`, {
+        method: "POST",
         body: formData,
       });
 
@@ -67,19 +69,22 @@ const PlantAnalyzer: React.FC = () => {
       }
 
       const data = await response.json();
-      
+
       if (!data.success) {
-        throw new Error(data.error || 'Unknown error occurred');
+        throw new Error(data.error || "Unknown error occurred");
       }
-      
+
       setAnalysisResult(data);
       toast.success("Analysis complete!", {
-        description: "Soil moisture analysis has been completed successfully."
+        description: "Soil moisture analysis has been completed successfully.",
       });
     } catch (error) {
-      console.error('Error analyzing image:', error);
-      toast.error('Failed to analyze image', {
-        description: error instanceof Error ? error.message : 'Please try uploading a different image.'
+      console.error("Error analyzing image:", error);
+      toast.error("Failed to analyze image", {
+        description:
+          error instanceof Error
+            ? error.message
+            : "Please try uploading a different image.",
       });
     } finally {
       setIsAnalyzing(false);
@@ -90,9 +95,9 @@ const PlantAnalyzer: React.FC = () => {
     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
       <Card className="md:col-span-2">
         <CardContent className="p-6">
-          <ImageUploader 
-            onImageUpload={handleImageUpload} 
-            isUploading={isAnalyzing} 
+          <ImageUploader
+            onImageUpload={handleImageUpload}
+            isUploading={isAnalyzing}
             imagePreview={imagePreview}
           />
         </CardContent>
@@ -106,14 +111,14 @@ const PlantAnalyzer: React.FC = () => {
                 <DropletIcon className="mr-2 text-primary" size={24} />
                 Moisture Analysis
               </h2>
-              <MoistureDisplay 
+              <MoistureDisplay
                 moistureStatus={analysisResult.classifiedSoilMoisture}
-                moistureScore={analysisResult.moistureScore} 
+                moistureScore={analysisResult.moistureScore}
               />
 
               <Separator className="my-6" />
 
-              <RecommendationCard 
+              <RecommendationCard
                 recommendation={analysisResult.recommendation}
                 moistureStatus={analysisResult.classifiedSoilMoisture}
               />
@@ -126,7 +131,11 @@ const PlantAnalyzer: React.FC = () => {
                 <LeafIcon className="mr-2 text-primary" size={24} />
                 Detailed Analysis
               </h2>
-              <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+              <Tabs
+                value={activeTab}
+                onValueChange={setActiveTab}
+                className="w-full"
+              >
                 <TabsList className="grid w-full grid-cols-3">
                   <TabsTrigger value="overview">Overview</TabsTrigger>
                   <TabsTrigger value="color">Color</TabsTrigger>
@@ -134,10 +143,15 @@ const PlantAnalyzer: React.FC = () => {
                 </TabsList>
 
                 <TabsContent value="overview" className="mt-4 space-y-4">
-                  <p className="text-lg">Soil Moisture: {analysisResult.classifiedSoilMoisture}</p>
-                  <p className="text-lg">Score: {analysisResult.moistureScore.toFixed(1)}</p>
                   <p className="text-lg">
-                    Timestamp: {new Date(analysisResult.timestamp * 1000).toLocaleString()}
+                    Soil Moisture: {analysisResult.classifiedSoilMoisture}
+                  </p>
+                  <p className="text-lg">
+                    Score: {analysisResult.moistureScore.toFixed(1)}
+                  </p>
+                  <p className="text-lg">
+                    Timestamp:{" "}
+                    {new Date(analysisResult.timestamp * 1000).toLocaleString()}
                   </p>
                 </TabsContent>
 
@@ -146,54 +160,100 @@ const PlantAnalyzer: React.FC = () => {
                     <div className="space-y-3">
                       <div className="grid grid-cols-2 gap-2">
                         <div className="p-3 rounded-md bg-muted/50">
-                          <p className="text-sm font-medium">Average Brightness</p>
-                          <p className="text-lg">{analysisResult.details.color.averageBrightness.toFixed(2)}</p>
+                          <p className="text-sm font-medium">
+                            Average Brightness
+                          </p>
+                          <p className="text-lg">
+                            {analysisResult.details.color.averageBrightness.toFixed(
+                              2
+                            )}
+                          </p>
                         </div>
                         <div className="p-3 rounded-md bg-muted/50">
-                          <p className="text-sm font-medium">Brightness Std Dev</p>
-                          <p className="text-lg">{analysisResult.details.color.brightnessStdDev.toFixed(2)}</p>
+                          <p className="text-sm font-medium">
+                            Brightness Std Dev
+                          </p>
+                          <p className="text-lg">
+                            {analysisResult.details.color.brightnessStdDev.toFixed(
+                              2
+                            )}
+                          </p>
                         </div>
                       </div>
-                      
+
                       <div className="grid grid-cols-3 gap-2">
                         <div className="p-3 rounded-md bg-muted/50">
                           <p className="text-sm font-medium">Red</p>
-                          <p className="text-lg">{analysisResult.details.color.colorChannels.red.toFixed(2)}</p>
+                          <p className="text-lg">
+                            {analysisResult.details.color.colorChannels.red.toFixed(
+                              2
+                            )}
+                          </p>
                         </div>
                         <div className="p-3 rounded-md bg-muted/50">
                           <p className="text-sm font-medium">Green</p>
-                          <p className="text-lg">{analysisResult.details.color.colorChannels.green.toFixed(2)}</p>
+                          <p className="text-lg">
+                            {analysisResult.details.color.colorChannels.green.toFixed(
+                              2
+                            )}
+                          </p>
                         </div>
                         <div className="p-3 rounded-md bg-muted/50">
                           <p className="text-sm font-medium">Blue</p>
-                          <p className="text-lg">{analysisResult.details.color.colorChannels.blue.toFixed(2)}</p>
+                          <p className="text-lg">
+                            {analysisResult.details.color.colorChannels.blue.toFixed(
+                              2
+                            )}
+                          </p>
                         </div>
                       </div>
-                      
+
                       <div className="grid grid-cols-2 gap-2">
                         <div className="p-3 rounded-md bg-muted/50">
                           <p className="text-sm font-medium">Blue-Red Ratio</p>
-                          <p className="text-lg">{analysisResult.details.color.blueToRedRatio.toFixed(2)}</p>
+                          <p className="text-lg">
+                            {analysisResult.details.color.blueToRedRatio.toFixed(
+                              2
+                            )}
+                          </p>
                         </div>
                         <div className="p-3 rounded-md bg-muted/50">
-                          <p className="text-sm font-medium">Brown Color Ratio</p>
-                          <p className="text-lg">{analysisResult.details.color.brownColorRatio.toFixed(2)}</p>
+                          <p className="text-sm font-medium">
+                            Brown Color Ratio
+                          </p>
+                          <p className="text-lg">
+                            {analysisResult.details.color.brownColorRatio.toFixed(
+                              2
+                            )}
+                          </p>
                         </div>
                       </div>
-                      
+
                       <div className="grid grid-cols-2 gap-2">
                         <div className="p-3 rounded-md bg-muted/50">
-                          <p className="text-sm font-medium">Average Saturation</p>
-                          <p className="text-lg">{analysisResult.details.color.averageSaturation.toFixed(2)}</p>
+                          <p className="text-sm font-medium">
+                            Average Saturation
+                          </p>
+                          <p className="text-lg">
+                            {analysisResult.details.color.averageSaturation.toFixed(
+                              2
+                            )}
+                          </p>
                         </div>
                         <div className="p-3 rounded-md bg-muted/50">
                           <p className="text-sm font-medium">Highlight Ratio</p>
-                          <p className="text-lg">{analysisResult.details.color.highlightRatio.toFixed(2)}</p>
+                          <p className="text-lg">
+                            {analysisResult.details.color.highlightRatio.toFixed(
+                              2
+                            )}
+                          </p>
                         </div>
                       </div>
                     </div>
                   ) : (
-                    <p className="text-lg">Color analysis data not available from API.</p>
+                    <p className="text-lg">
+                      Color analysis data not available from API.
+                    </p>
                   )}
                 </TabsContent>
 
@@ -203,48 +263,81 @@ const PlantAnalyzer: React.FC = () => {
                       <div className="grid grid-cols-2 gap-2">
                         <div className="p-3 rounded-md bg-muted/50">
                           <p className="text-sm font-medium">Edge Density</p>
-                          <p className="text-lg">{analysisResult.details.texture.edgeDensity.toFixed(4)}</p>
+                          <p className="text-lg">
+                            {analysisResult.details.texture.edgeDensity.toFixed(
+                              4
+                            )}
+                          </p>
                         </div>
                         <div className="p-3 rounded-md bg-muted/50">
                           <p className="text-sm font-medium">Granularity</p>
-                          <p className="text-lg">{analysisResult.details.texture.granularity.toFixed(2)}</p>
+                          <p className="text-lg">
+                            {analysisResult.details.texture.granularity.toFixed(
+                              2
+                            )}
+                          </p>
                         </div>
                       </div>
-                      
+
                       <div className="grid grid-cols-2 gap-2">
                         <div className="p-3 rounded-md bg-muted/50">
                           <p className="text-sm font-medium">Crack Density</p>
-                          <p className="text-lg">{analysisResult.details.texture.crackDensity.toFixed(4)}</p>
+                          <p className="text-lg">
+                            {analysisResult.details.texture.crackDensity.toFixed(
+                              4
+                            )}
+                          </p>
                         </div>
                         <div className="p-3 rounded-md bg-muted/50">
-                          <p className="text-sm font-medium">Reflectance Variation</p>
-                          <p className="text-lg">{analysisResult.details.texture.reflectanceVariation.toFixed(4)}</p>
+                          <p className="text-sm font-medium">
+                            Reflectance Variation
+                          </p>
+                          <p className="text-lg">
+                            {analysisResult.details.texture.reflectanceVariation.toFixed(
+                              4
+                            )}
+                          </p>
                         </div>
                       </div>
-                      
+
                       <div className="grid grid-cols-2 gap-2">
                         <div className="p-3 rounded-md bg-muted/50">
                           <p className="text-sm font-medium">Water Detected</p>
-                          <p className="text-lg">{analysisResult.details.texture.waterDetected ? 'Yes' : 'No'}</p>
+                          <p className="text-lg">
+                            {analysisResult.details.texture.waterDetected
+                              ? "Yes"
+                              : "No"}
+                          </p>
                         </div>
                         <div className="p-3 rounded-md bg-muted/50">
-                          <p className="text-sm font-medium">Water Area Ratio</p>
-                          <p className="text-lg">{analysisResult.details.texture.waterAreaRatio.toFixed(4)}</p>
+                          <p className="text-sm font-medium">
+                            Water Area Ratio
+                          </p>
+                          <p className="text-lg">
+                            {analysisResult.details.texture.waterAreaRatio.toFixed(
+                              4
+                            )}
+                          </p>
                         </div>
                       </div>
-                      
+
                       <div className="grid grid-cols-2 gap-2">
                         <div className="p-3 rounded-md bg-muted/50">
                           <p className="text-sm font-medium">Soil Type</p>
                           <p className="text-lg">
-                            {analysisResult.details.texture.isDarkSoil ? 'Dark Soil' : 
-                             analysisResult.details.texture.isLightSoil ? 'Light Soil' : 'Medium Soil'}
+                            {analysisResult.details.texture.isDarkSoil
+                              ? "Dark Soil"
+                              : analysisResult.details.texture.isLightSoil
+                              ? "Light Soil"
+                              : "Medium Soil"}
                           </p>
                         </div>
                       </div>
                     </div>
                   ) : (
-                    <p className="text-lg">Texture analysis data not available from API.</p>
+                    <p className="text-lg">
+                      Texture analysis data not available from API.
+                    </p>
                   )}
                 </TabsContent>
               </Tabs>

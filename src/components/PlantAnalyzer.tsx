@@ -1,39 +1,46 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Separator } from '@/components/ui/separator';
-import { DropletIcon, LeafIcon, SunIcon } from 'lucide-react';
+import { DropletIcon, LeafIcon } from 'lucide-react';
 import ImageUploader from './ImageUploader';
-import MoistureDisplay from './MoistureDisplay';
 import RecommendationCard from './RecommendationCard';
 import { toast } from 'sonner';
+import MoistureDisplay from './MoistureDisplay';
 
 export type AnalysisResult = {
-  averageBrightness: number;
-  brightnessStdDev: number;
-  averageSaturation: number;
-  averageBlue: number;
-  averageGreen: number;
-  averageRed: number;
-  blueToRedRatio: number;
-  averageLightness: number;
-  edgeDensity: number;
-  granularity: number;
-  localContrast: number;
-  hueSTD: number;
-  crackDensity: number;
-  brownColorRatio: number;
-  highlightRatio: number;
-  reflectanceVariation: number;
-  waterDetected: boolean;
-  waterAreaRatio: number;
-  isDarkSoil: boolean;
-  isLightSoil: boolean;
-  soilMoistureScore: number;
   classifiedSoilMoisture: string;
   recommendation: string;
-}
+  moistureScore: number;
+  timestamp: number;
+  success: boolean;
+  details?: {
+    color: {
+      averageBrightness: number;
+      brightnessStdDev: number;
+      averageSaturation: number;
+      colorChannels: {
+        red: number;
+        green: number;
+        blue: number;
+      };
+      blueToRedRatio: number;
+      averageLightness: number;
+      brownColorRatio: number;
+      highlightRatio: number;
+    };
+    texture: {
+      edgeDensity: number;
+      granularity: number;
+      crackDensity: number;
+      reflectanceVariation: number;
+      waterDetected: boolean;
+      waterAreaRatio: number;
+      isDarkSoil: boolean;
+      isLightSoil: boolean;
+    };
+  };
+};
 
 const PlantAnalyzer: React.FC = () => {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
@@ -45,69 +52,37 @@ const PlantAnalyzer: React.FC = () => {
     try {
       setIsAnalyzing(true);
       setImagePreview(URL.createObjectURL(image));
-      
-      // Create FormData for the API request
+
       const formData = new FormData();
       formData.append('image', image);
-      
-      // Mock API call since we don't have an actual backend
-      // In production, replace this with a real API call
-      setTimeout(() => {
-        // Mock data based on provided example
-        const mockResult: AnalysisResult = {
-          averageBrightness: 73.51,
-          brightnessStdDev: 36.72,
-          averageSaturation: 50.71,
-          averageBlue: 61.14,
-          averageGreen: 67.85,
-          averageRed: 73.50,
-          blueToRedRatio: 0.83,
-          averageLightness: 72.85,
-          edgeDensity: 0.1153,
-          granularity: 22.49,
-          localContrast: 56.96,
-          hueSTD: 10.56,
-          crackDensity: 0.6081,
-          brownColorRatio: 0.9708,
-          highlightRatio: 0.0163,
-          reflectanceVariation: 0.4995,
-          waterDetected: false,
-          waterAreaRatio: 0.0206,
-          isDarkSoil: true,
-          isLightSoil: false,
-          soilMoistureScore: 5.48,
-          classifiedSoilMoisture: 'Dry',
-          recommendation: 'Soil is dry. Watering needed immediately.'
-        };
 
-        setAnalysisResult(mockResult);
-        setIsAnalyzing(false);
-        toast.success("Analysis complete!", {
-          description: "Soil moisture analysis has been completed successfully."
-        });
-      }, 2000);
-
-      /* In production, uncomment this code and use your actual API endpoint
-      const response = await fetch('/api/analyze-soil', {
+      // Use your actual API endpoint here
+      const response = await fetch('http://127.0.0.1:5000/api/analyze-soil', {
         method: 'POST',
         body: formData,
       });
 
       if (!response.ok) {
-        throw new Error('Failed to analyze image');
+        throw new Error(`Failed to analyze image: ${response.statusText}`);
       }
 
       const data = await response.json();
+      
+      if (!data.success) {
+        throw new Error(data.error || 'Unknown error occurred');
+      }
+      
       setAnalysisResult(data);
-      setIsAnalyzing(false);
-      toast.success("Analysis complete!");
-      */
+      toast.success("Analysis complete!", {
+        description: "Soil moisture analysis has been completed successfully."
+      });
     } catch (error) {
       console.error('Error analyzing image:', error);
-      setIsAnalyzing(false);
       toast.error('Failed to analyze image', {
-        description: 'Please try uploading a different image.'
+        description: error instanceof Error ? error.message : 'Please try uploading a different image.'
       });
+    } finally {
+      setIsAnalyzing(false);
     }
   };
 
@@ -122,7 +97,7 @@ const PlantAnalyzer: React.FC = () => {
           />
         </CardContent>
       </Card>
-      
+
       {analysisResult && (
         <>
           <Card className="md:col-span-1">
@@ -132,19 +107,19 @@ const PlantAnalyzer: React.FC = () => {
                 Moisture Analysis
               </h2>
               <MoistureDisplay 
-                moistureScore={analysisResult.soilMoistureScore} 
-                moistureStatus={analysisResult.classifiedSoilMoisture} 
+                moistureStatus={analysisResult.classifiedSoilMoisture}
+                moistureScore={analysisResult.moistureScore} 
               />
-              
+
               <Separator className="my-6" />
-              
+
               <RecommendationCard 
                 recommendation={analysisResult.recommendation}
                 moistureStatus={analysisResult.classifiedSoilMoisture}
               />
             </CardContent>
           </Card>
-          
+
           <Card className="md:col-span-1">
             <CardContent className="p-6">
               <h2 className="text-2xl font-semibold mb-4 flex items-center">
@@ -157,84 +132,120 @@ const PlantAnalyzer: React.FC = () => {
                   <TabsTrigger value="color">Color</TabsTrigger>
                   <TabsTrigger value="texture">Texture</TabsTrigger>
                 </TabsList>
-                
+
                 <TabsContent value="overview" className="mt-4 space-y-4">
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="bg-muted/50 rounded-lg p-3">
-                      <p className="text-sm font-medium">Soil Type</p>
-                      <p className="text-lg">{analysisResult.isDarkSoil ? 'Dark Soil' : 'Light Soil'}</p>
-                    </div>
-                    <div className="bg-muted/50 rounded-lg p-3">
-                      <p className="text-sm font-medium">Water Detected</p>
-                      <p className="text-lg">{analysisResult.waterDetected ? 'Yes' : 'No'}</p>
-                    </div>
-                    <div className="bg-muted/50 rounded-lg p-3">
-                      <p className="text-sm font-medium">Water Area Ratio</p>
-                      <p className="text-lg">{(analysisResult.waterAreaRatio * 100).toFixed(1)}%</p>
-                    </div>
-                    <div className="bg-muted/50 rounded-lg p-3">
-                      <p className="text-sm font-medium">Brown Color Ratio</p>
-                      <p className="text-lg">{(analysisResult.brownColorRatio * 100).toFixed(1)}%</p>
-                    </div>
-                  </div>
+                  <p className="text-lg">Soil Moisture: {analysisResult.classifiedSoilMoisture}</p>
+                  <p className="text-lg">Score: {analysisResult.moistureScore.toFixed(1)}</p>
+                  <p className="text-lg">
+                    Timestamp: {new Date(analysisResult.timestamp * 1000).toLocaleString()}
+                  </p>
                 </TabsContent>
-                
+
                 <TabsContent value="color" className="mt-4 space-y-4">
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="bg-muted/50 rounded-lg p-3">
-                      <p className="text-sm font-medium">Average Red</p>
-                      <p className="text-lg">{analysisResult.averageRed.toFixed(1)}</p>
+                  {analysisResult.details ? (
+                    <div className="space-y-3">
+                      <div className="grid grid-cols-2 gap-2">
+                        <div className="p-3 rounded-md bg-muted/50">
+                          <p className="text-sm font-medium">Average Brightness</p>
+                          <p className="text-lg">{analysisResult.details.color.averageBrightness.toFixed(2)}</p>
+                        </div>
+                        <div className="p-3 rounded-md bg-muted/50">
+                          <p className="text-sm font-medium">Brightness Std Dev</p>
+                          <p className="text-lg">{analysisResult.details.color.brightnessStdDev.toFixed(2)}</p>
+                        </div>
+                      </div>
+                      
+                      <div className="grid grid-cols-3 gap-2">
+                        <div className="p-3 rounded-md bg-muted/50">
+                          <p className="text-sm font-medium">Red</p>
+                          <p className="text-lg">{analysisResult.details.color.colorChannels.red.toFixed(2)}</p>
+                        </div>
+                        <div className="p-3 rounded-md bg-muted/50">
+                          <p className="text-sm font-medium">Green</p>
+                          <p className="text-lg">{analysisResult.details.color.colorChannels.green.toFixed(2)}</p>
+                        </div>
+                        <div className="p-3 rounded-md bg-muted/50">
+                          <p className="text-sm font-medium">Blue</p>
+                          <p className="text-lg">{analysisResult.details.color.colorChannels.blue.toFixed(2)}</p>
+                        </div>
+                      </div>
+                      
+                      <div className="grid grid-cols-2 gap-2">
+                        <div className="p-3 rounded-md bg-muted/50">
+                          <p className="text-sm font-medium">Blue-Red Ratio</p>
+                          <p className="text-lg">{analysisResult.details.color.blueToRedRatio.toFixed(2)}</p>
+                        </div>
+                        <div className="p-3 rounded-md bg-muted/50">
+                          <p className="text-sm font-medium">Brown Color Ratio</p>
+                          <p className="text-lg">{analysisResult.details.color.brownColorRatio.toFixed(2)}</p>
+                        </div>
+                      </div>
+                      
+                      <div className="grid grid-cols-2 gap-2">
+                        <div className="p-3 rounded-md bg-muted/50">
+                          <p className="text-sm font-medium">Average Saturation</p>
+                          <p className="text-lg">{analysisResult.details.color.averageSaturation.toFixed(2)}</p>
+                        </div>
+                        <div className="p-3 rounded-md bg-muted/50">
+                          <p className="text-sm font-medium">Highlight Ratio</p>
+                          <p className="text-lg">{analysisResult.details.color.highlightRatio.toFixed(2)}</p>
+                        </div>
+                      </div>
                     </div>
-                    <div className="bg-muted/50 rounded-lg p-3">
-                      <p className="text-sm font-medium">Average Green</p>
-                      <p className="text-lg">{analysisResult.averageGreen.toFixed(1)}</p>
-                    </div>
-                    <div className="bg-muted/50 rounded-lg p-3">
-                      <p className="text-sm font-medium">Average Blue</p>
-                      <p className="text-lg">{analysisResult.averageBlue.toFixed(1)}</p>
-                    </div>
-                    <div className="bg-muted/50 rounded-lg p-3">
-                      <p className="text-sm font-medium">Blue-to-Red Ratio</p>
-                      <p className="text-lg">{analysisResult.blueToRedRatio.toFixed(2)}</p>
-                    </div>
-                    <div className="bg-muted/50 rounded-lg p-3">
-                      <p className="text-sm font-medium">Avg. Saturation</p>
-                      <p className="text-lg">{analysisResult.averageSaturation.toFixed(1)}</p>
-                    </div>
-                    <div className="bg-muted/50 rounded-lg p-3">
-                      <p className="text-sm font-medium">Avg. Brightness</p>
-                      <p className="text-lg">{analysisResult.averageBrightness.toFixed(1)}</p>
-                    </div>
-                  </div>
+                  ) : (
+                    <p className="text-lg">Color analysis data not available from API.</p>
+                  )}
                 </TabsContent>
-                
+
                 <TabsContent value="texture" className="mt-4 space-y-4">
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="bg-muted/50 rounded-lg p-3">
-                      <p className="text-sm font-medium">Edge Density</p>
-                      <p className="text-lg">{analysisResult.edgeDensity.toFixed(4)}</p>
+                  {analysisResult.details ? (
+                    <div className="space-y-3">
+                      <div className="grid grid-cols-2 gap-2">
+                        <div className="p-3 rounded-md bg-muted/50">
+                          <p className="text-sm font-medium">Edge Density</p>
+                          <p className="text-lg">{analysisResult.details.texture.edgeDensity.toFixed(4)}</p>
+                        </div>
+                        <div className="p-3 rounded-md bg-muted/50">
+                          <p className="text-sm font-medium">Granularity</p>
+                          <p className="text-lg">{analysisResult.details.texture.granularity.toFixed(2)}</p>
+                        </div>
+                      </div>
+                      
+                      <div className="grid grid-cols-2 gap-2">
+                        <div className="p-3 rounded-md bg-muted/50">
+                          <p className="text-sm font-medium">Crack Density</p>
+                          <p className="text-lg">{analysisResult.details.texture.crackDensity.toFixed(4)}</p>
+                        </div>
+                        <div className="p-3 rounded-md bg-muted/50">
+                          <p className="text-sm font-medium">Reflectance Variation</p>
+                          <p className="text-lg">{analysisResult.details.texture.reflectanceVariation.toFixed(4)}</p>
+                        </div>
+                      </div>
+                      
+                      <div className="grid grid-cols-2 gap-2">
+                        <div className="p-3 rounded-md bg-muted/50">
+                          <p className="text-sm font-medium">Water Detected</p>
+                          <p className="text-lg">{analysisResult.details.texture.waterDetected ? 'Yes' : 'No'}</p>
+                        </div>
+                        <div className="p-3 rounded-md bg-muted/50">
+                          <p className="text-sm font-medium">Water Area Ratio</p>
+                          <p className="text-lg">{analysisResult.details.texture.waterAreaRatio.toFixed(4)}</p>
+                        </div>
+                      </div>
+                      
+                      <div className="grid grid-cols-2 gap-2">
+                        <div className="p-3 rounded-md bg-muted/50">
+                          <p className="text-sm font-medium">Soil Type</p>
+                          <p className="text-lg">
+                            {analysisResult.details.texture.isDarkSoil ? 'Dark Soil' : 
+                             analysisResult.details.texture.isLightSoil ? 'Light Soil' : 'Medium Soil'}
+                          </p>
+                        </div>
+                      </div>
                     </div>
-                    <div className="bg-muted/50 rounded-lg p-3">
-                      <p className="text-sm font-medium">Granularity</p>
-                      <p className="text-lg">{analysisResult.granularity.toFixed(2)}</p>
-                    </div>
-                    <div className="bg-muted/50 rounded-lg p-3">
-                      <p className="text-sm font-medium">Local Contrast</p>
-                      <p className="text-lg">{analysisResult.localContrast.toFixed(2)}</p>
-                    </div>
-                    <div className="bg-muted/50 rounded-lg p-3">
-                      <p className="text-sm font-medium">Crack Density</p>
-                      <p className="text-lg">{analysisResult.crackDensity.toFixed(4)}</p>
-                    </div>
-                    <div className="bg-muted/50 rounded-lg p-3">
-                      <p className="text-sm font-medium">Reflectance Variation</p>
-                      <p className="text-lg">{analysisResult.reflectanceVariation.toFixed(4)}</p>
-                    </div>
-                    <div className="bg-muted/50 rounded-lg p-3">
-                      <p className="text-sm font-medium">Highlight Ratio</p>
-                      <p className="text-lg">{(analysisResult.highlightRatio * 100).toFixed(2)}%</p>
-                    </div>
-                  </div>
+                  ) : (
+                    <p className="text-lg">Texture analysis data not available from API.</p>
+                  )}
                 </TabsContent>
               </Tabs>
             </CardContent>

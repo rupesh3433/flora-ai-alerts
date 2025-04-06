@@ -1,39 +1,33 @@
-
 import React, { useState, useEffect } from 'react';
 import { Progress } from '@/components/ui/progress';
 import { DropletIcon } from 'lucide-react';
 
 interface MoistureDisplayProps {
-  moistureScore: number;
   moistureStatus: string;
+  moistureScore?: number;
 }
 
 const MoistureDisplay: React.FC<MoistureDisplayProps> = ({ 
-  moistureScore, 
-  moistureStatus 
+  moistureStatus, 
+  moistureScore = 0
 }) => {
-  // Convert the moisture score to a percentage (assuming scale of 0-10)
-  const normalizedScore = Math.min(Math.max(moistureScore, 0), 10);
-  const moisturePercentage = (normalizedScore / 10) * 100;
+  // The score is on a 0–10 scale; convert to percentage (0-100) for the progress bar.
+  const normalizedPercentage = Math.min(moistureScore * 10, 100);
   
   const [progress, setProgress] = useState(0);
   
   useEffect(() => {
-    // Animate the progress
     const timer = setTimeout(() => {
-      setProgress(moisturePercentage);
+      setProgress(normalizedPercentage);
     }, 300);
-    
     return () => clearTimeout(timer);
-  }, [moisturePercentage]);
+  }, [normalizedPercentage]);
   
-  // Determine color based on moisture status
+  // Determine text color based on moisture status.
   const getStatusColor = () => {
     switch(moistureStatus.toLowerCase()) {
       case 'dry':
         return 'text-red-500';
-      case 'slightly moist':
-        return 'text-yellow-500';
       case 'moist':
         return 'text-green-500';
       case 'wet':
@@ -43,13 +37,11 @@ const MoistureDisplay: React.FC<MoistureDisplayProps> = ({
     }
   };
   
-  // Determine icon size based on moisture status
+  // Determine icon sizes based on moisture status.
   const getDropletSize = () => {
     switch(moistureStatus.toLowerCase()) {
       case 'dry':
         return [16, 16, 16, 16, 16];
-      case 'slightly moist':
-        return [16, 16, 16, 24, 24];
       case 'moist':
         return [16, 24, 24, 24, 32];
       case 'wet':
@@ -69,16 +61,11 @@ const MoistureDisplay: React.FC<MoistureDisplayProps> = ({
       </div>
       
       <div className="relative mb-8">
-        <Progress 
-          value={progress} 
-          className="h-4 moisture-bar"
-        />
+        <Progress value={progress} className="h-4 moisture-bar" />
         <div className="absolute -bottom-6 left-0 right-0 flex justify-between text-xs text-muted-foreground">
-          <span>Dry</span>
           <span>Low</span>
-          <span>Moderate</span>
-          <span>Good</span>
-          <span>Wet</span>
+          <span>Medium</span>
+          <span>High</span>
         </div>
       </div>
       
@@ -86,7 +73,7 @@ const MoistureDisplay: React.FC<MoistureDisplayProps> = ({
         <div className="flex justify-between items-center">
           <div className="text-sm">
             <p className="font-medium text-foreground">Moisture Score</p>
-            <p className="text-2xl font-bold">{moistureScore.toFixed(1)}/10</p>
+            <p className="text-2xl font-bold">{moistureScore.toFixed(1)}</p>
           </div>
           <div className="flex items-end gap-1">
             {dropletSizes.map((size, i) => (

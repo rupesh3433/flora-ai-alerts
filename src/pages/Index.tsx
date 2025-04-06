@@ -1,4 +1,3 @@
-
 import React from 'react';
 import PlantAnalyzer from '@/components/PlantAnalyzer';
 
@@ -11,7 +10,7 @@ const Index = () => {
             Flora <span className="text-primary">AI</span> Assistant
           </h1>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            Upload a photo of your plant's soil to receive watering recommendations and moisture analysis
+            Upload a photo of your plant's soil to receive watering recommendations and moisture analysis.
           </p>
         </header>
         

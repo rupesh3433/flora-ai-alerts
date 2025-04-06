@@ -1,4 +1,3 @@
-
 import React, { useState, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -45,23 +44,32 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
     }
   };
 
-  const triggerFileInput = () => {
+  // Fixed button click handler to prevent event propagation
+  const handleButtonClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
     fileInputRef.current?.click();
+  };
+
+  const handleContainerClick = () => {
+    if (!imagePreview && !isUploading) {
+      fileInputRef.current?.click();
+    }
   };
 
   return (
     <div className="w-full">
       <div
-        className={`border-2 border-dashed rounded-lg p-6 flex flex-col items-center justify-center cursor-pointer transition-all
+        className={`border-2 border-dashed rounded-lg p-6 flex flex-col items-center justify-center transition-all
           ${isDragging ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/50 hover:bg-muted/50'}
           ${imagePreview ? 'h-auto' : 'h-64'}`}
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
-        onClick={!imagePreview ? triggerFileInput : undefined}
+        onClick={handleContainerClick}
+        style={{ cursor: imagePreview ? 'default' : 'pointer' }}
       >
         {imagePreview ? (
-          <div className="w-full flex flex-col items-center">
+          <div className="w-full flex flex-col items-center" onClick={e => e.stopPropagation()}>
             <div className="relative w-full max-w-md mb-4">
               <img 
                 src={imagePreview} 
@@ -75,7 +83,7 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
               )}
             </div>
             <Button 
-              onClick={triggerFileInput} 
+              onClick={handleButtonClick} 
               variant="outline" 
               disabled={isUploading}
               className="mt-2"
@@ -90,11 +98,11 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
             </div>
             <h3 className="text-lg font-medium mb-1">Upload plant image</h3>
             <p className="text-sm text-muted-foreground text-center mb-4">
-              Drag and drop or click to upload a clear image of your plant's soil
+              Drag and drop or click to upload a clear image of your plant's soil.
             </p>
             <Button 
               variant="default" 
-              onClick={triggerFileInput}
+              onClick={handleButtonClick}
               disabled={isUploading}
               className="flex items-center gap-2"
             >
@@ -115,7 +123,7 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
 
       {!imagePreview && (
         <p className="text-xs text-muted-foreground text-center mt-2">
-          For best results, ensure the soil is clearly visible and well-lit
+          For best results, ensure the soil is clearly visible and well-lit.
         </p>
       )}
     </div>

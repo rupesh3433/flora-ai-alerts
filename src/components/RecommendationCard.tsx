@@ -1,9 +1,8 @@
-
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { DropletIcon, AlertCircle, Bell, SunIcon } from 'lucide-react';
+import { Bell, SunIcon } from 'lucide-react';
 import { toast } from 'sonner';
 import { getMoistureAction, getRecommendationIcon } from '@/utils/moistureUtils';
 
@@ -20,21 +19,16 @@ const RecommendationCard: React.FC<RecommendationCardProps> = ({
   const RecommendationIcon = getRecommendationIcon(moistureStatus);
   
   const scheduleReminder = () => {
-    // In a real app, this would connect to a notification system
     toast.success("Watering reminder scheduled!", {
       description: "We'll remind you when it's time to water your plant."
     });
   };
 
-  // Determine the severity of the alert
   const getAlertVariant = () => {
     switch(moistureStatus.toLowerCase()) {
       case 'dry':
         return 'destructive';
-      case 'slightly moist':
-        return 'default';
       case 'moist':
-        return 'default';
       case 'wet':
         return 'default';
       default:
@@ -49,14 +43,12 @@ const RecommendationCard: React.FC<RecommendationCardProps> = ({
       <Alert variant={getAlertVariant() as "default" | "destructive"} className="mb-4">
         <RecommendationIcon className="h-4 w-4" />
         <AlertTitle>Plant Care Action Required</AlertTitle>
-        <AlertDescription>
-          {recommendation}
-        </AlertDescription>
+        <AlertDescription>{recommendation}</AlertDescription>
       </Alert>
       
       <Card>
         <CardContent className="p-4">
-          <div className="flex flex-col sm:flex-row items-center gap-3 justify-between">
+          <div className="flex flex-col md:flex-row items-center gap-3 justify-between">
             <div className="flex items-center gap-2">
               <ActionIcon className={`h-5 w-5 ${variant === 'default' ? 'text-primary' : 'text-destructive'}`} />
               <span className="font-medium">{actionText}</span>
@@ -65,9 +57,9 @@ const RecommendationCard: React.FC<RecommendationCardProps> = ({
               onClick={scheduleReminder} 
               variant="default"
               size="sm"
-              className="whitespace-nowrap w-full sm:w-auto"
+              className="whitespace-nowrap w-full md:w-auto"
             >
-              <Bell className="mr-2 h-4 w-4" />
+              <Bell className="h-4 w-4" />
               Schedule Reminder
             </Button>
           </div>

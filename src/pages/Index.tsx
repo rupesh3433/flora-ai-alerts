@@ -7,7 +7,7 @@ const Index = () => {
       <div className="max-w-5xl mx-auto">
         <header className="text-center mb-8 md:mb-12">
           <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-[#2E3B2F] mb-4">
-            Flora <span className="text-primary">AI</span> Assistant
+            Soil <span className="text-primary">Moisture</span> Analyzer
           </h1>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
             Upload a photo of your plant's soil to receive watering recommendations and moisture analysis.
